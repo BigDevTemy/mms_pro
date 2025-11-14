@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Preserve Authorization header for PHP (needed for JWT auth)
+# Use server var directly to avoid missing backrefs
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Route all requests to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]

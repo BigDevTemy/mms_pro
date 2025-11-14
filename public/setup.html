@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MMS – First-time setup</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        max-width: 700px;
+        width: 100%;
+        padding: 32px;
+      }
+    </style>
+    <script>
+      // Use the PHP API when frontend runs on python server (port 8000)
+      const API_BASE = '../backend/api'
+      async function postJson(path, body) {
+        const res = await fetch(`${API_BASE}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw data
+        return data
+      }
+      async function setupSuperadmin(ev) {
+        ev.preventDefault()
+        const form = ev.target
+        const out = document.getElementById('result')
+        out.textContent = ''
+        try {
+          const payload = {
+            email: form.email.value.trim(),
+            password: form.password.value,
+            fullName: form.fullName.value.trim(),
+          }
+          const res = await postJson('/auth/register_superadmin', payload)
+          out.className = 'success'
+          out.textContent = 'Superadmin created. Proceed to login.'
+        } catch (e) {
+          out.className = 'error'
+          out.textContent = e && e.error ? e.error : 'Setup failed'
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>First-time setup</h1>
+        <p class="muted">
+          Create the first global superadmin. This account manages all companies
+          and users.
+        </p>
+        <form onsubmit="setupSuperadmin(event)">
+          <label>Full name</label>
+          <input name="fullName" placeholder="Jane Doe" />
+          <label>Email</label>
+          <input name="email" type="email" required />
+          <label>Password</label>
+          <input name="password" type="password" required />
+          <button type="submit">Create superadmin</button>
+          <div id="result" class="muted"></div>
+        </form>
+        <p class="muted" style="margin-top: 12px">
+          Already set up? <a href="login.html">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

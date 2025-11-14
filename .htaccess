@@ -1,0 +1,16 @@
+# Root-level Apache routing helpers for /mms_pro
+# Goal: make /mms_pro/app.html resolve to /mms_pro/public/app.html and
+#       /mms_pro/ resolve to /mms_pro/public/index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Set base to this project path (adjust if your vhost uses a different mount)
+  RewriteBase /mms_pro/
+
+  # Route /app.html to /public/app.html
+  RewriteRule ^app\.html$ public/app.html [L,NC]
+
+  # Route bare project root to /public/index.html
+  RewriteRule ^$ public/index.html [L]
+</IfModule>

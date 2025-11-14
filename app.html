@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MMS Pro</title>
+    <meta http-equiv="refresh" content="0; url=public/app.html" />
+    <script>
+      ;(function () {
+        try {
+          var hash = window.location.hash || ''
+          var path = window.location.pathname || ''
+          // Replace trailing /app.html (with or without hash) with /public/app.html
+          path = path.replace(/\/app\.html$/i, '/')
+          if (!/\/public\/$/i.test(path)) {
+            path = path.replace(/\/?$/, '/')
+            path += 'public/'
+          }
+          window.location.replace(path + 'app.html' + hash)
+        } catch (e) {
+          // Fallback to relative link below
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <p>
+      If you are not redirected automatically,
+      <a href="public/app.html">continue to the app</a>.
+    </p>
+  </body>
+</html>

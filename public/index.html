@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MMS-PRO - Login / Signup</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <style>
+      .auth-card {
+        position: relative;
+        overflow: hidden;
+      }
+      .auth-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #06b6d4, #f59e0b);
+        border-radius: 24px 24px 0 0;
+      }
+      .auth-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        padding-top: 1rem;
+      }
+      .auth-header .logo-icon {
+        font-size: 2.5rem;
+        color: #3b82f6;
+        margin-bottom: 0.5rem;
+        animation: logoPulse 2s ease-in-out infinite;
+      }
+      .auth-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+      }
+      .auth-header p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0.25rem 0 0 0;
+      }
+      .tab-content h2 {
+        text-align: center;
+        color: #1f2937;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+      }
+      .form-group label {
+        font-weight: 600;
+        color: #374151;
+      }
+      .form-footer {
+        margin-top: 2rem;
+      }
+      .forgot-password {
+        color: #3b82f6;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+      }
+      .forgot-password:hover {
+        color: #1d4ed8;
+      }
+      @keyframes logoPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+    </style>
+    <script>
+      const API_BASE = '../backend/api'
+      function showToast(msg, ok = true) {
+        let el = document.getElementById('toast')
+        if (!el) {
+          el = document.createElement('div')
+          el.id = 'toast'
+          el.className = 'toast'
+          document.body.appendChild(el)
+        }
+        el.className = `toast ${ok ? 'success' : 'error'} show`
+        el.textContent = msg
+        setTimeout(() => {
+          el.className = el.className.replace('show', '')
+        }, 2500)
+      }
+
+      function toggleSpinner(btn, show) {
+        if (show) {
+          btn.disabled = true
+          btn.innerHTML = '<span class="spinner"></span> Loading...'
+        } else {
+          btn.disabled = false
+          btn.innerHTML = btn.dataset.originalText
+        }
+      }
+
+      async function postJson(path, body) {
+        const res = await fetch(`${API_BASE}${path}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: localStorage.getItem('token')
+              ? `Bearer ${localStorage.getItem('token')}`
+              : undefined,
+          },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw data
+        return data
+      }
+
+      async function signupCompany(ev) {
+        ev.preventDefault()
+        const form = ev.target
+        const btn = form.querySelector('button')
+        btn.dataset.originalText = btn.innerHTML
+        toggleSpinner(btn, true)
+        const out = document.getElementById('signupResult')
+        out.textContent = ''
+        try {
+          const payload = {
+            company: form.company.value.trim(),
+            email: form.email.value.trim(),
+            password: form.password.value,
+            fullName: form.fullName.value.trim(),
+          }
+          await postJson('/auth/register_company', payload)
+          out.className = 'success'
+          out.textContent =
+            'Company registered. You can now login as company admin.'
+          showToast('Company registered')
+          form.reset()
+        } catch (e) {
+          out.className = 'error'
+          out.textContent =
+            e && e.error ? e.error : 'Failed to register company'
+        } finally {
+          toggleSpinner(btn, false)
+        }
+      }
+
+      async function login(ev) {
+        ev.preventDefault()
+        const form = ev.target
+        const btn = form.querySelector('button')
+        btn.dataset.originalText = btn.innerHTML
+        toggleSpinner(btn, true)
+        const out = document.getElementById('loginResult')
+        out.textContent = ''
+        try {
+          const payload = {
+            email: form.email.value.trim(),
+            password: form.password.value,
+            //company: form.company.value.trim() || undefined,
+          }
+          const res = await postJson('/auth/login', payload)
+          localStorage.setItem('token', res.token)
+          out.className = 'success'
+          out.textContent = 'Logged in. Redirecting...'
+          showToast('Logged in')
+
+          setTimeout(() => {
+            const role =
+              res.user && res.user.roles && res.user.roles[0]
+                ? res.user.roles[0].name
+                : null
+            const hashMap = {
+              superadmin: '#dashboard',
+              admin: '#companies',
+              technician: '#assets',
+            }
+            const hash = hashMap[role] || '#dashboard'
+
+            // Build base path robustly:
+            // - remove index.html
+            // - if URL is at project root (no /public/), route to /public/app.html
+            let base = window.location.pathname.replace(/index\.html?$/i, '')
+            if (!/\/public\/$/i.test(base)) {
+              base = base.replace(/\/?$/, '/')
+              base += 'public/'
+            }
+            window.location.href = `${base}app.html${hash}`
+          }, 1000)
+        } catch (e) {
+          out.className = 'error'
+          out.textContent = e && e.error ? e.error : 'Login failed'
+        } finally {
+          toggleSpinner(btn, false)
+        }
+      }
+
+      async function fetchMe() {
+        const token = localStorage.getItem('token')
+        if (!token) {
+          alert('No token')
+          return
+        }
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await res.json()
+        document.getElementById('meDump').textContent = JSON.stringify(
+          data,
+          null,
+          2
+        )
+      }
+    </script>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <i class="fas fa-bolt logo-icon"></i>
+          <h1>MMS-PRO</h1>
+          <p>Machine Maintenance System Professional Version</p>
+        </div>
+        <!-- <div class="">
+          <button class="tab-link active" onclick="openTab(event, 'login')">
+            Login
+          </button>
+          <button class="tab-link" onclick="openTab(event, 'signup')">
+            Sign Up
+          </button>
+          
+        </div> -->
+
+        <div id="login" class="tab-content active">
+          <h2>Welcome Back</h2>
+          <!-- <p class="muted">Leave company empty to login as superadmin.</p> -->
+          <form onsubmit="login(event)">
+            <!-- <div class="form-group">
+              <label>Company (optional)</label>
+              <input name="company" placeholder="Acme Ltd" />
+            </div> -->
+            <div class="form-group">
+              <label>Email</label>
+              <input name="email" type="email" required />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input name="password" type="password" required />
+            </div>
+            <div class="form-footer">
+              <a href="reset.html" class="forgot-password">Forgot Password?</a>
+              <button type="submit">Login</button>
+            </div>
+            <div id="loginResult" class="muted"></div>
+          </form>
+        </div>
+
+        <div id="signup" class="tab-content">
+          <h2>Create Your Company Account</h2>
+          <form onsubmit="signupCompany(event)">
+            <div class="form-group">
+              <label>Company Name</label>
+              <input name="company" required placeholder="e.g., Acme Ltd" />
+            </div>
+            <div class="form-group">
+              <label>Admin Full Name</label>
+              <input name="fullName" placeholder="Jane Doe" />
+            </div>
+            <div class="form-group">
+              <label>Admin Email</label>
+              <input
+                name="email"
+                type="email"
+                required
+                placeholder="admin@acme.com"
+              />
+            </div>
+            <div class="form-group">
+              <label>Password</label>
+              <input name="password" type="password" required />
+            </div>
+            <button type="submit">Create Company</button>
+            <div id="signupResult" class="muted"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function openTab(evt, tabName) {
+        var i, tabcontent, tablinks
+        tabcontent = document.getElementsByClassName('tab-content')
+        for (i = 0; i < tabcontent.length; i++) {
+          tabcontent[i].style.display = 'none'
+        }
+        tablinks = document.getElementsByClassName('tab-link')
+        for (i = 0; i < tablinks.length; i++) {
+          tablinks[i].className = tablinks[i].className.replace(' active', '')
+        }
+        document.getElementById(tabName).style.display = 'block'
+        evt.currentTarget.className += ' active'
+      }
+
+      // Initially, show the first tab
+      document.getElementById('login').style.display = 'block'
+    </script>
+  </body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MMS – Sign in</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .container {
+        max-width: 700px;
+        width: 100%;
+        padding: 32px;
+      }
+    </style>
+    <script>
+      const API_BASE = '../backend/api'
+      function showToast(msg, ok = true) {
+        let el = document.getElementById('toast')
+        if (!el) {
+          el = document.createElement('div')
+          el.id = 'toast'
+          el.className = 'toast'
+          document.body.appendChild(el)
+        }
+        el.style.borderColor = ok ? '#2dd4bf' : '#ef4444'
+        el.textContent = msg
+        el.style.display = 'block'
+        setTimeout(() => {
+          el.style.display = 'none'
+        }, 2500)
+      }
+      async function postJson(path, body) {
+        const res = await fetch(`${API_BASE}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw data
+        return data
+      }
+      async function login(ev) {
+        ev.preventDefault()
+        const form = ev.target
+        const out = document.getElementById('result')
+        out.textContent = ''
+        try {
+          const payload = {
+            email: form.email.value.trim(),
+            password: form.password.value,
+          }
+          const res = await postJson('/auth/login', payload)
+          localStorage.setItem('token', res.token)
+          out.className = 'success'
+          out.textContent = 'Logged in.'
+          showToast('Logged in')
+          // Redirect to SPA; roles/permissions handled inside the app
+          location.href = 'app.html'
+        } catch (e) {
+          out.className = 'error'
+          out.textContent = e && e.error ? e.error : 'Login failed'
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <h1>Sign in</h1>
+            <p class="muted">Enter your email and password to continue.</p>
+            <form onsubmit="login(event)">
+              <label>Email</label>
+              <input name="email" type="email" required />
+              <label>Password</label>
+              <input name="password" type="password" required />
+              <button type="submit">Continue</button>
+              <div id="result" class="muted"></div>
+            </form>
+            <p class="muted" style="margin-top: 12px">
+              First time here?
+              <a href="setup.html">Create the first superadmin</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

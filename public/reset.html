@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MMS - Password Reset</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      const API_BASE = '../backend/api'
+      async function postJson(path, body) {
+        const res = await fetch(`${API_BASE}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw data
+        return data
+      }
+      async function requestReset(ev) {
+        ev.preventDefault()
+        const form = ev.target
+        const out = document.getElementById('reqOut')
+        out.textContent = ''
+        try {
+          const res = await postJson('/auth/request_password_reset', {
+            email: form.email.value.trim(),
+          })
+          out.className = 'success'
+          out.textContent = `Reset requested. Dev token: ${res.resetToken || '(check email)'}`
+        } catch (e) {
+          out.className = 'error'
+          out.textContent = (e && e.error) || 'Failed'
+        }
+      }
+      async function doReset(ev) {
+        ev.preventDefault()
+        const form = ev.target
+        const out = document.getElementById('doOut')
+        out.textContent = ''
+        try {
+          await postJson('/auth/reset_password', {
+            resetToken: form.token.value.trim(),
+            newPassword: form.password.value,
+          })
+          out.className = 'success'
+          out.textContent = 'Password reset. You can login now.'
+        } catch (e) {
+          out.className = 'error'
+          out.textContent = (e && e.error) || 'Failed'
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Request Reset</h1>
+        <form onsubmit="requestReset(event)">
+          <label>Email</label>
+          <input name="email" type="email" required />
+          <button type="submit">Request</button>
+          <div id="reqOut" class="muted"></div>
+        </form>
+      </div>
+      <div class="card">
+        <h1>Reset Password</h1>
+        <form onsubmit="doReset(event)">
+          <label>Reset Token</label>
+          <input name="token" required />
+          <label>New Password</label>
+          <input name="password" type="password" required />
+          <button type="submit">Reset</button>
+          <div id="doOut" class="muted"></div>
+        </form>
+      </div>
+    </div>
+  </body>
+  </html>
+
+
