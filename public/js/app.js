@@ -3,146 +3,146 @@
 
   // --- Component Classes ---
 
-  class CompanyComponent {
-    constructor(container) {
-      this.container = container
-      this.companies = []
-      this.searchQuery = ''
-      this.init()
-    }
+  // class CompanyComponent {
+  //   constructor(container) {
+  //     this.container = container
+  //     this.companies = []
+  //     this.searchQuery = ''
+  //     this.init()
+  //   }
 
-    async init() {
-      this.renderLayout()
-      await this.loadCompanies()
-      this.setupEventListeners()
-    }
+  //   async init() {
+  //     this.renderLayout()
+  //     await this.loadCompanies()
+  //     this.setupEventListeners()
+  //   }
 
-    renderLayout() {
-      this.container.innerHTML = `
-        <div class="company-header">
-          <button class="btn btn-primary" id="addCompanyBtn">Add Company</button>
-          <div class="search-container">
-            <input type="text" id="searchCompanies" class="form-control" placeholder="Search companies...">
-          </div>
-        </div>
-        <div class="table-responsive">
-          <table id="companiesTable" class="table table-striped">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-        </div>
-        
-        <div id="addCompanyModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2>Add New Company</h2>
-              <span class="close-btn" id="closeModalBtn">&times;</span>
-            </div>
-            <div class="modal-body">
-              <form id="addCompanyForm">
-                <div class="form-group">
-                  <label for="companyName">Company Name</label>
-                  <input type="text" id="companyName" name="name" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Create Company</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      `
-    }
+  //   renderLayout() {
+  //     this.container.innerHTML = `
+  //       <div class="company-header">
+  //         <button class="btn btn-primary" id="addCompanyBtn">Add Company</button>
+  //         <div class="search-container">
+  //           <input type="text" id="searchCompanies" class="form-control" placeholder="Search companies...">
+  //         </div>
+  //       </div>
+  //       <div class="table-responsive">
+  //         <table id="companiesTable" class="table table-striped">
+  //           <thead>
+  //             <tr>
+  //               <th>ID</th>
+  //               <th>Name</th>
+  //               <th>Created At</th>
+  //             </tr>
+  //           </thead>
+  //           <tbody>
+  //           </tbody>
+  //         </table>
+  //       </div>
 
-    async loadCompanies() {
-      try {
-        const res = await getJson('/companies')
-        this.companies = Array.isArray(res) ? res : res.items || []
-        this.renderTable()
-      } catch (error) {
-        showToast(
-          error && error.error ? error.error : 'Failed to load companies.',
-          false
-        )
-      }
-    }
+  //       <div id="addCompanyModal" class="modal" style="display:none;">
+  //         <div class="modal-content">
+  //           <div class="modal-header">
+  //             <h2>Add New Company</h2>
+  //             <span class="close-btn" id="closeModalBtn">&times;</span>
+  //           </div>
+  //           <div class="modal-body">
+  //             <form id="addCompanyForm">
+  //               <div class="form-group">
+  //                 <label for="companyName">Company Name</label>
+  //                 <input type="text" id="companyName" name="name" class="form-control" required>
+  //               </div>
+  //               <button type="submit" class="btn btn-primary">Create Company</button>
+  //             </form>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     `
+  //   }
 
-    renderTable() {
-      const tableBody = this.container.querySelector('#companiesTable tbody')
-      const filteredCompanies = this.companies.filter((company) =>
-        company.name.toLowerCase().includes(this.searchQuery.toLowerCase())
-      )
+  //   async loadCompanies() {
+  //     try {
+  //       const res = await getJson('/companies')
+  //       this.companies = Array.isArray(res) ? res : res.items || []
+  //       this.renderTable()
+  //     } catch (error) {
+  //       showToast(
+  //         error && error.error ? error.error : 'Failed to load companies.',
+  //         false
+  //       )
+  //     }
+  //   }
 
-      if (filteredCompanies.length === 0) {
-        tableBody.innerHTML =
-          '<tr><td colspan="3">No companies found.</td></tr>'
-        return
-      }
+  //   renderTable() {
+  //     const tableBody = this.container.querySelector('#companiesTable tbody')
+  //     const filteredCompanies = this.companies.filter((company) =>
+  //       company.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+  //     )
 
-      tableBody.innerHTML = filteredCompanies
-        .map(
-          (company, index) => `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${company.name}</td>
-          <td>${new Date(company.created_at).toLocaleDateString()}</td>
-        </tr>
-      `
-        )
-        .join('')
-    }
+  //     if (filteredCompanies.length === 0) {
+  //       tableBody.innerHTML =
+  //         '<tr><td colspan="3">No companies found.</td></tr>'
+  //       return
+  //     }
 
-    setupEventListeners() {
-      const addCompanyBtn = this.container.querySelector('#addCompanyBtn')
-      const modal = this.container.querySelector('#addCompanyModal')
-      const closeModalBtn = this.container.querySelector('#closeModalBtn')
-      const addCompanyForm = this.container.querySelector('#addCompanyForm')
-      const searchInput = this.container.querySelector('#searchCompanies')
+  //     tableBody.innerHTML = filteredCompanies
+  //       .map(
+  //         (company, index) => `
+  //       <tr>
+  //         <td>${index + 1}</td>
+  //         <td>${company.name}</td>
+  //         <td>${new Date(company.created_at).toLocaleDateString()}</td>
+  //       </tr>
+  //     `
+  //       )
+  //       .join('')
+  //   }
 
-      addCompanyBtn.addEventListener('click', () => {
-        modal.style.display = 'block'
-      })
+  //   setupEventListeners() {
+  //     const addCompanyBtn = this.container.querySelector('#addCompanyBtn')
+  //     const modal = this.container.querySelector('#addCompanyModal')
+  //     const closeModalBtn = this.container.querySelector('#closeModalBtn')
+  //     const addCompanyForm = this.container.querySelector('#addCompanyForm')
+  //     const searchInput = this.container.querySelector('#searchCompanies')
 
-      closeModalBtn.addEventListener('click', () => {
-        modal.style.display = 'none'
-      })
+  //     addCompanyBtn.addEventListener('click', () => {
+  //       modal.style.display = 'block'
+  //     })
 
-      window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-          modal.style.display = 'none'
-        }
-      })
+  //     closeModalBtn.addEventListener('click', () => {
+  //       modal.style.display = 'none'
+  //     })
 
-      addCompanyForm.addEventListener('submit', async (event) => {
-        event.preventDefault()
-        const companyName = event.target.elements.name.value
+  //     window.addEventListener('click', (event) => {
+  //       if (event.target === modal) {
+  //         modal.style.display = 'none'
+  //       }
+  //     })
 
-        try {
-          await postJson('/companies', { name: companyName })
-          showToast('Company created successfully!')
-          modal.style.display = 'none'
-          addCompanyForm.reset()
-          await this.loadCompanies()
-        } catch (error) {
-          showToast(error.error || 'Failed to create company.', false)
-        }
-      })
+  //     addCompanyForm.addEventListener('submit', async (event) => {
+  //       event.preventDefault()
+  //       const companyName = event.target.elements.name.value
 
-      searchInput.addEventListener('input', (event) => {
-        this.searchQuery = event.target.value
-        this.renderTable()
-      })
-    }
+  //       try {
+  //         await postJson('/companies', { name: companyName })
+  //         showToast('Company created successfully!')
+  //         modal.style.display = 'none'
+  //         addCompanyForm.reset()
+  //         await this.loadCompanies()
+  //       } catch (error) {
+  //         showToast(error.error || 'Failed to create company.', false)
+  //       }
+  //     })
 
-    destroy() {
-      this.container.innerHTML = ''
-    }
-  }
+  //     searchInput.addEventListener('input', (event) => {
+  //       this.searchQuery = event.target.value
+  //       this.renderTable()
+  //     })
+  //   }
+
+  //   destroy() {
+  //     this.container.innerHTML = ''
+  //   }
+  // }
 
   // --- App ---
 

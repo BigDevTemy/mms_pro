@@ -315,15 +315,25 @@ button:disabled {
   position: fixed;
   top: 0;
   left: 0;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
-  color: #1f2937;
+  background: radial-gradient(
+      circle at 0 0,
+      rgba(56, 189, 248, 0.18) 0,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 100% 0,
+      rgba(129, 140, 248, 0.25) 0,
+      transparent 55%
+    ),
+    linear-gradient(180deg, #020617 0%, #020617 55%, #020617 100%);
+  color: #e5e7eb;
   display: flex;
   flex-direction: column;
-  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0 30px rgba(15, 23, 42, 0.85);
   z-index: 100;
   overflow-y: auto;
-  backdrop-filter: blur(10px);
-  border-right: 1px solid #e5e7eb;
+  backdrop-filter: blur(16px);
+  border-right: 1px solid rgba(148, 163, 184, 0.4);
 }
 
 .sidebar-header {
@@ -335,8 +345,12 @@ button:disabled {
 }
 
 .logo-icon {
-  font-size: 2.5rem;
-  color: #3b82f6;
+  font-size: 2.3rem;
+  background: linear-gradient(135deg, #3b82f6, #22c55e, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 18px rgba(15, 23, 42, 0.8);
   animation: logoPulse 2s ease-in-out infinite;
 }
 
@@ -370,12 +384,12 @@ button:disabled {
 .sidebar-nav > ul > li > a {
   padding: 0.75rem 1rem !important;
   margin: 0.25rem 0;
-  border-radius: 6px;
+  border-radius: 10px;
   transition: all 0.2s ease;
 }
 
 .sidebar-nav > ul > li > a:hover {
-  background: #f3f4f6;
+  background: rgba(148, 163, 184, 0.28);
 }
 
 .sidebar-nav > ul > li.active > a {
@@ -438,14 +452,14 @@ button:disabled {
 .sidebar-nav .submenu a {
   padding: 0.5rem 1rem !important;
   font-size: 0.9rem;
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   margin: 0.15rem 0;
   position: relative;
   background: transparent;
   transition: all 0.2s ease;
-  color: #6b7280 !important;
+  color: rgba(226, 232, 240, 0.92) !important;
   white-space: normal; /* allow wrapping on small screens */
   gap: 0.75rem; /* add consistent spacing between icon and text */
 }
@@ -458,15 +472,15 @@ button:disabled {
 }
 
 .sidebar-nav .submenu a:hover {
-  background: #e5e7eb !important;
-  color: #374151 !important;
+  background: rgba(148, 163, 184, 0.35) !important;
+  color: #f9fafb !important;
   padding-left: 1.25rem !important;
 }
 
 .sidebar-nav .submenu li.active a {
-  background: #3b82f6 !important;
-  font-weight: 500;
-  color: #fff !important;
+  background: linear-gradient(90deg, #3b82f6, #22c55e) !important;
+  font-weight: 600;
+  color: #f9fafb !important;
 }
 
 /* Ensure proper spacing for submenu items */
@@ -489,11 +503,12 @@ button:disabled {
   display: flex;
   align-items: center;
   padding: 1rem 1.5rem;
-  color: #374151;
+  color: #e5e7eb;
   text-decoration: none;
-  border-radius: 12px;
+  border-radius: 999px;
   font-weight: 500;
-  font-size: 1.05rem; /* Increased font size */
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -532,10 +547,10 @@ button:disabled {
 }
 
 .sidebar-nav li.active a {
-  background: #3b82f6;
+  background: linear-gradient(90deg, #3b82f6, #22c55e);
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-  transform: translateX(8px);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
+  transform: translateX(10px);
 }
 
 .sidebar-nav li.active a i {
@@ -557,17 +572,17 @@ button:disabled {
   display: flex;
   align-items: center;
   padding: 0.75rem 0;
-  color: #6b7280;
+  color: #9ca3af;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
-  border-radius: 8px;
+  border-radius: 999px;
   padding: 0.75rem 1rem;
 }
 
 .sidebar-footer a:hover {
-  color: #3b82f6;
-  background: #f3f4f6;
+  color: #e5e7eb;
+  background: rgba(148, 163, 184, 0.32);
   transform: translateX(4px);
 }
 
@@ -1381,6 +1396,18 @@ button:disabled {
 .modal {
   display: none;
   position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modalWorkOrderx {
+  display: none;
+  position: absolute;
   z-index: 1001;
   left: 0;
   top: 0;

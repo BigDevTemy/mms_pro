@@ -41,6 +41,8 @@ class WorkOrdersComponent {
     this.isSuper = false
     this.selectedCompanyId = null
     this.companies = []
+    this.assignableUsers = []
+    this.assignedSearchUI = null
 
     // Filters
     this.searchQuery = ''
@@ -67,6 +69,7 @@ class WorkOrdersComponent {
     }
     await this.loadTasks()
     await this.loadMachines()
+    await this.fetchUsers()
     await this.refreshAll()
   }
 
@@ -155,7 +158,7 @@ class WorkOrdersComponent {
                 </div>
                 <div class="form-group">
                   <label for="woTaskSel">Task</label>
-                  <select id="woTaskSel" name="taskId" class="form-control" required>
+                  <select id="woTaskSel" name="taskId" class="form-control" >
                     <option value="">Select Task</option>
                   </select>
                 </div>
@@ -168,7 +171,7 @@ class WorkOrdersComponent {
                 </div>
                 <div class="form-group">
                   <label for="woMachineSel">Machine (last-level)</label>
-                  <select id="woMachineSel" name="machineRowId" class="form-control">
+                  <select id="woMachineSel" name="machineRowId" class="form-control" required>
                     <option value="">Select Machine</option>
                   </select>
                 </div>
@@ -197,7 +200,10 @@ class WorkOrdersComponent {
                 </div>
                 <div class="form-group">
                   <label for="woAssignedTo">Assigned To (User ID - optional)</label>
-                  <input id="woAssignedTo" name="assignedTo" class="form-control" type="number" min="1" placeholder="e.g., 42" />
+                  <select id="woAssignedTo" name="assignedTo" class="form-control">
+                    <option value="">Select User</option>
+                  </select>
+                  <div id="woAssignedSearchWrap"></div>
                 </div>
                 <div class="form-group">
                   <label>
@@ -248,6 +254,13 @@ class WorkOrdersComponent {
 
       .form-control { width: 220px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius:6px; font-size:14px; }
       #woSearch.form-control { width: 320px; }
+      .searchable-select { position: relative; width: 100%; }
+      .searchable-select .searchable-input { width: 100%; }
+      .searchable-results { position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #d1d5db; border-radius:6px; margin-top:4px; max-height:180px; overflow-y:auto; box-shadow:0 8px 20px rgba(0,0,0,.08); display:none; z-index:1100; }
+      .searchable-results.open { display:block; }
+      .searchable-item { padding:8px 10px; cursor:pointer; }
+      .searchable-item:hover { background:#f3f4f6; }
+      .searchable-empty { padding:8px 10px; color:#6b7280; font-size:13px; }
       .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:6px; border:1px solid #d1d5db; background:#fff; color:#111827; cursor:pointer; }
       .btn-primary { background:#2563eb; border-color:#2563eb; color:#fff; }
       .btn-secondary { background:#f3f4f6; }
@@ -351,6 +364,7 @@ class WorkOrdersComponent {
       companySel.addEventListener('change', async (e) => {
         this.selectedCompanyId = e.target.value ? Number(e.target.value) : null
         await this.loadMachines()
+        await this.fetchUsers()
       })
     }
 
@@ -482,6 +496,157 @@ class WorkOrdersComponent {
     }
   }
 
+  buildQuery(params) {
+    const usp = new URLSearchParams()
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') usp.set(k, String(v))
+    })
+    const qs = usp.toString()
+    return qs ? `?${qs}` : ''
+  }
+
+  async fetchUsers() {
+    try {
+      if (this.isSuper && this.selectedCompanyId) {
+        this.companyId = this.selectedCompanyId
+        //params.set('companyId', String(this.selectedCompanyId))
+      }
+      const qs = this.buildQuery({
+        companyId: this.companyId ?? '',
+        q: this.searchQ || '',
+        limit: 500,
+        offset: 0,
+      })
+      const res = await this.getJson(`/admin/users${qs}`)
+      const itemsUsers = Array.isArray(res?.items) ? res.items : []
+      // backend returns limit and offset only; infer total from page length and previous offset
+
+      const modalAssignUsers = this.container.querySelector('#woAssignedTo')
+      if (modalAssignUsers) {
+        const opts = ['<option value="">Select Assign User</option>']
+        const assignable = []
+        itemsUsers.forEach((m) => {
+          if (m.roleName && m.roleName == 'technician') {
+            const name = m.fullName != null ? String(m.fullName) : '#' + m.id
+            opts.push(`<option value="${m.id}">${this.escape(name)}</option>`)
+            assignable.push({
+              id: m.id,
+              label: name,
+            })
+          }
+        })
+        modalAssignUsers.innerHTML = opts.join('')
+        this.assignableUsers = assignable
+        this.buildAssignedSearch(assignable)
+      }
+    } catch (e) {
+      this.users = []
+    }
+  }
+
+  buildAssignedSearch(assignable) {
+    const select = this.container.querySelector('#woAssignedTo')
+    const mount = this.container.querySelector('#woAssignedSearchWrap')
+    if (!select || !mount) return
+
+    // Ensure UI exists once
+    if (!this.assignedSearchUI) {
+      const wrapper = document.createElement('div')
+      wrapper.className = 'searchable-select'
+      const input = document.createElement('input')
+      input.type = 'text'
+      input.className = 'form-control searchable-input'
+      input.placeholder = 'Search technician...'
+      input.autocomplete = 'off'
+      const results = document.createElement('div')
+      results.className = 'searchable-results'
+
+      wrapper.appendChild(input)
+      wrapper.appendChild(results)
+      mount.innerHTML = ''
+      mount.appendChild(wrapper)
+
+      const closeResults = () => results.classList.remove('open')
+
+      input.addEventListener('focus', () => {
+        results.classList.add('open')
+        this.renderAssignedResults(input.value)
+      })
+      input.addEventListener('input', (e) => {
+        this.renderAssignedResults(e.target.value)
+        if (e.target.value.trim() === '') {
+          select.value = ''
+        }
+      })
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeResults()
+      })
+      document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) closeResults()
+      })
+      results.addEventListener('click', (e) => {
+        const item = e.target.closest('.searchable-item')
+        if (!item) return
+        const id = item.getAttribute('data-id') || ''
+        const match = (this.assignableUsers || []).find(
+          (u) => String(u.id) === String(id)
+        )
+        select.value = id
+        input.value = match ? match.label : ''
+        closeResults()
+      })
+
+      this.assignedSearchUI = { wrapper, input, results, select }
+    }
+
+    // Refresh results with latest data set
+    this.renderAssignedResults(
+      this.assignedSearchUI.input ? this.assignedSearchUI.input.value : ''
+    )
+    this.syncAssignedSearchFromSelect()
+    // Hide the original select once the searchable input is ready
+    select.style.display = 'none'
+  }
+
+  renderAssignedResults(query = '') {
+    if (!this.assignedSearchUI) return
+    const { results } = this.assignedSearchUI
+    const q = (query || '').toLowerCase()
+    const matches = (this.assignableUsers || []).filter((u) => {
+      if (!q) return true
+      return (
+        (u.label && u.label.toLowerCase().includes(q)) ||
+        String(u.id).includes(q)
+      )
+    })
+    const rows = matches.slice(0, 50)
+    if (!rows.length) {
+      results.innerHTML = `<div class="searchable-empty">No matches</div>`
+      results.classList.add('open')
+      return
+    }
+    results.innerHTML = rows
+      .map(
+        (u) =>
+          `<div class="searchable-item" data-id="${u.id}">${this.escape(
+            u.label
+          )}</div>`
+      )
+      .join('')
+    results.classList.add('open')
+  }
+
+  syncAssignedSearchFromSelect() {
+    if (!this.assignedSearchUI) return
+    const { select, input, results } = this.assignedSearchUI
+    const selectedVal = select ? select.value : ''
+    const match = (this.assignableUsers || []).find(
+      (u) => String(u.id) === String(selectedVal)
+    )
+    input.value = match ? match.label : ''
+    if (results) results.classList.remove('open')
+  }
+
   async loadMachines() {
     try {
       const params = new URLSearchParams()
@@ -513,6 +678,8 @@ class WorkOrdersComponent {
       this.lastChildTypeKey = null
     }
   }
+
+  async loadAssignUsers() {}
 
   // Data loading
   async loadStats() {
@@ -693,6 +860,7 @@ class WorkOrdersComponent {
     if (!form) return
     if (!wo) {
       form.reset()
+      this.syncAssignedSearchFromSelect()
       return
     }
     form.title.value = wo.title || ''
@@ -729,6 +897,8 @@ class WorkOrdersComponent {
       shutdownStartEl.disabled = !on
       shutdownEndEl.disabled = !on
     }
+
+    this.syncAssignedSearchFromSelect()
   }
 
   openModal(isEdit = false) {
@@ -740,6 +910,7 @@ class WorkOrdersComponent {
     if (modal) modal.style.display = 'none'
     const form = this.container.querySelector('#woForm')
     if (form) form.reset()
+    this.syncAssignedSearchFromSelect()
     this.editing = null
   }
 
@@ -787,7 +958,7 @@ class WorkOrdersComponent {
           : null
     }
 
-    if (!payload.title || !payload.taskId) {
+    if (!payload.title) {
       showToast('Please provide Title and Task', false)
       return
     }

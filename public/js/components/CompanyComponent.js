@@ -100,13 +100,17 @@ class CompanyComponent {
 
     tableBody.innerHTML = this.companies
       .map(
-        (company) => `
+        (company, index) => `
       <tr>
-        <td>${company.id}</td>
+        <td>${index + 1}</td>
         <td>${company.name}</td>
         <td>
-          <button class="btn btn-sm btn-primary edit-btn" data-id="${company.id}">Edit</button>
-          <button class="btn btn-sm btn-danger delete-btn" data-id="${company.id}">Delete</button>
+          <button class="btn btn-sm btn-primary edit-btn" data-id="${
+            company.id
+          }">Edit</button>
+          <button class="btn btn-sm btn-danger delete-btn" data-id="${
+            company.id
+          }">Delete</button>
         </td>
       </tr>
     `

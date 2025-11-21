@@ -67,6 +67,7 @@ class AdminController
         $password = (string)($input['password'] ?? '');
         $firstName = trim($input['firstName'] ?? '');
         $lastName = trim($input['lastName'] ?? '');
+        $employeeNumber = trim($input['employeeNumber'] ?? '');
         $fullName = trim($input['fullName'] ?? (($firstName !== '' || $lastName !== '') ? trim($firstName . ' ' . $lastName) : ''));
         $companyId = isset($input['companyId']) ? (int)$input['companyId'] : null;
         $roleName = trim($input['role'] ?? ''); // e.g., company_admin/technician/viewer
@@ -95,8 +96,8 @@ class AdminController
         try {
             $pdo->beginTransaction();
             $passwordHash = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $pdo->prepare('INSERT INTO users (company_id, email, password_hash, full_name) VALUES (?, ?, ?, ?)');
-            $stmt->execute([$allowedCompanyId, $email, $passwordHash, $fullName]);
+            $stmt = $pdo->prepare('INSERT INTO users (company_id, email, password_hash, full_name,employee_number) VALUES (?, ?, ?, ?,?)');
+            $stmt->execute([$allowedCompanyId, $email, $passwordHash, $fullName,$employeeNumber]);
             $userId = (int)$pdo->lastInsertId();
 
             $scope = $roleName === 'superadmin' ? 'global' : 'company';
@@ -148,7 +149,7 @@ class AdminController
             // Superadmin or unscoped: list ALL users (both global and company), optionally filtered by q
             if ($q !== '') {
                 $like = '%' . $q . '%';
-                $sql = "SELECT u.id, u.email, u.full_name AS fullName, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
+                $sql = "SELECT u.id, u.email, u.full_name AS fullName,u.employee_number AS employeeNumber, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
                                r.name AS roleName, r.scope AS roleScope
                         FROM users u
                         LEFT JOIN companies c ON u.company_id = c.id
@@ -160,7 +161,7 @@ class AdminController
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute([$like, $like]);
             } else {
-                $sql = "SELECT u.id, u.email, u.full_name AS fullName, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
+                $sql = "SELECT u.id, u.email, u.full_name AS fullName, u.employee_number AS employeeNumber, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
                                r.name AS roleName, r.scope AS roleScope
                         FROM users u
                         LEFT JOIN companies c ON u.company_id = c.id
@@ -175,7 +176,7 @@ class AdminController
             if ($q !== '') {
                 $like = '%' . $q . '%';
                 // Include both company-scoped users and global users for visibility (e.g., superadmin)
-                $sql = "SELECT u.id, u.email, u.full_name AS fullName, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
+                $sql = "SELECT u.id, u.email, u.full_name AS fullName,u.employee_number AS employeeNumber, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
                                r.name AS roleName, r.scope AS roleScope
                         FROM users u
                         LEFT JOIN companies c ON u.company_id = c.id
@@ -189,7 +190,7 @@ class AdminController
                 $stmt->execute([$companyId, $like, $like]);
             } else {
                 // Include both company-scoped users and global users when a company is selected
-                $sql = "SELECT u.id, u.email, u.full_name AS fullName, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
+                $sql = "SELECT u.id, u.email, u.full_name AS fullName,u.employee_number AS employeeNumber, u.is_active AS isActive, u.company_id AS companyId, c.name AS companyName,
                                r.name AS roleName, r.scope AS roleScope
                         FROM users u
                         LEFT JOIN companies c ON u.company_id = c.id
@@ -264,6 +265,7 @@ class AdminController
         $input = json_input();
         $firstName = trim($input['firstName'] ?? '');
         $lastName = trim($input['lastName'] ?? '');
+        $employeeNumber = trim($input['employeeNumber'] ?? '');
         $fullName = trim($input['fullName'] ?? (($firstName !== '' || $lastName !== '') ? trim($firstName . ' ' . $lastName) : ''));
         $roleName = trim($input['role'] ?? '');
         $companyIdNew = isset($input['companyId']) ? (int)$input['companyId'] : $companyId;
@@ -275,8 +277,8 @@ class AdminController
         try {
             $pdo->beginTransaction();
             // Update user details
-            $stmt = $pdo->prepare('UPDATE users SET full_name = ?, company_id = ? WHERE id = ?');
-            $stmt->execute([$fullName, $companyIdNew, $id]);
+            $stmt = $pdo->prepare('UPDATE users SET full_name = ?, company_id = ?, employee_number = ? WHERE id = ?');
+            $stmt->execute([$fullName, $companyIdNew,$employeeNumber, $id]);
 
             // Update role if provided
             if ($roleName !== '') {
@@ -681,6 +683,7 @@ class AdminController
                 $email = trim($user['email'] ?? '');
                 $firstName = trim($user['firstname'] ?? $user['firstName'] ?? '');
                 $lastName = trim($user['lastname'] ?? $user['lastName'] ?? '');
+                $employeeNumber = trim($user['employeenumber'] ?? $user['employeeNumber'] ?? '');
                 $password = $user['password'] ?? '';
                 $role = trim($user['role'] ?? '');
                 $companyName = trim($user['companyname'] ?? $user['companyName'] ?? '');
@@ -705,9 +708,9 @@ class AdminController
                 // Hash password
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
                 // Create user
-                $stmt = $pdo->prepare('INSERT INTO users (email, full_name, password_hash, company_id, is_active) VALUES (?, ?, ?, ?, 1)');
+                $stmt = $pdo->prepare('INSERT INTO users (email, full_name,employee_number, password_hash, company_id, is_active) VALUES (?, ?, ?, ?,?, 1)');
                 $fullName = trim($firstName . ' ' . $lastName);
-                $stmt->execute([$email, $fullName, $hashedPassword, $companyId]);
+                $stmt->execute([$email, $fullName,$employeeNumber, $hashedPassword, $companyId]);
                 $userId = (int)$pdo->lastInsertId();
                 // Assign role
                 $stmt = $pdo->prepare('SELECT id FROM roles WHERE name = ?');

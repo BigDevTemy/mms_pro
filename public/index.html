@@ -10,10 +10,38 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
     />
     <style>
+      /* Full-page auth background aligned with the app shell theme */
+      .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.5rem 1.5rem;
+        background: radial-gradient(
+            circle at 0% 0%,
+            rgba(56, 189, 248, 0.18) 0,
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 100% 0%,
+            rgba(129, 140, 248, 0.25) 0,
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 0% 100%,
+            rgba(34, 197, 94, 0.12) 0,
+            transparent 55%
+          ),
+          linear-gradient(135deg, #020617 0%, #020617 60%, #020617 100%);
+      }
+
+      /* Card keeps light surface for readability, with branded top accent */
       .auth-card {
         position: relative;
         overflow: hidden;
+        border-radius: 24px;
       }
+
       .auth-card::before {
         content: '';
         position: absolute;
@@ -24,63 +52,72 @@
         background: linear-gradient(90deg, #3b82f6, #06b6d4, #f59e0b);
         border-radius: 24px 24px 0 0;
       }
+
       .auth-header {
         text-align: center;
         margin-bottom: 2rem;
+        padding-top: 1.25rem;
         padding-bottom: 1.5rem;
         border-bottom: 1px solid #e5e7eb;
-        padding-top: 1rem;
       }
+
       .auth-header .logo-icon {
-        font-size: 2.5rem;
-        color: #3b82f6;
+        font-size: 2.3rem;
         margin-bottom: 0.5rem;
         animation: logoPulse 2s ease-in-out infinite;
       }
+
       .auth-header h1 {
         font-size: 1.5rem;
         font-weight: 700;
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #3b82f6, #22c55e);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         margin: 0;
       }
+
       .auth-header p {
         color: #6b7280;
         font-size: 0.9rem;
-        margin: 0.25rem 0 0 0;
+        margin: 0.35rem 0 0 0;
       }
+
       .tab-content h2 {
         text-align: center;
-        color: #1f2937;
-        font-size: 1.25rem;
+        color: #111827;
+        font-size: 1.3rem;
         font-weight: 600;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.75rem;
       }
+
       .form-group label {
         font-weight: 600;
         color: #374151;
       }
+
       .form-footer {
         margin-top: 2rem;
       }
+
       .forgot-password {
         color: #3b82f6;
         text-decoration: none;
         font-size: 0.9rem;
         transition: color 0.2s;
       }
+
       .forgot-password:hover {
         color: #1d4ed8;
       }
+
       @keyframes logoPulse {
         0%,
         100% {
           transform: scale(1);
         }
         50% {
-          transform: scale(1.1);
+          transform: scale(1.08);
         }
       }
     </style>

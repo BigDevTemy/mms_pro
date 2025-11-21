@@ -238,6 +238,9 @@ class UMUsersComponent {
     const password = form.querySelector('[name="password"]').value
     const firstName = form.querySelector('[name="firstName"]').value.trim()
     const lastName = form.querySelector('[name="lastName"]').value.trim()
+    const employeeNumber = form
+      .querySelector('[name="employeeNumber"]')
+      .value.trim()
     const role = form.querySelector('[name="role"]').value
     const companyIdStr = form.querySelector('[name="companyId"]')
       ? form.querySelector('[name="companyId"]').value
@@ -257,6 +260,7 @@ class UMUsersComponent {
     if (password) payload.password = password
     if (firstName) payload.firstName = firstName
     if (lastName) payload.lastName = lastName
+    if (employeeNumber) payload.employeeNumber = employeeNumber
     if (companyId !== null && !isNaN(companyId)) payload.companyId = companyId
 
     try {
@@ -299,6 +303,7 @@ class UMUsersComponent {
       'email',
       'firstName',
       'lastName',
+      'employeeNumber',
       'password',
       'role',
       'companyName',
@@ -308,6 +313,7 @@ class UMUsersComponent {
         'john.doe@example.com',
         'John',
         'Doe',
+        'BPL001',
         'password123',
         'user',
         'Company A',
@@ -316,6 +322,7 @@ class UMUsersComponent {
         'jane.smith@example.com',
         'Jane',
         'Smith',
+        'BPL002',
         'password456',
         'admin',
         'Company B',
@@ -353,6 +360,7 @@ class UMUsersComponent {
         'email',
         'firstname',
         'lastname',
+        'employeenumber',
         'password',
         'role',
         'companyname',
@@ -362,7 +370,7 @@ class UMUsersComponent {
       )
       if (!expectedHeaders.every((h) => normalizedHeaders.includes(h))) {
         window.showToast(
-          'CSV headers must include: email, firstName, lastName, password, role, companyName',
+          'CSV headers must include: email, firstName, lastName, employeeNumber, password, role, companyName',
           false
         )
         return
@@ -730,6 +738,7 @@ class UMUsersComponent {
       'First Name',
       'Last Name',
       'Full Name',
+      'Employee Number',
       'Active',
       'Role',
       'Company',
@@ -759,6 +768,7 @@ class UMUsersComponent {
           u.firstName || '',
           u.lastName || '',
           u.fullName || '',
+          u.employeeNumber || '',
           u.isActive === 1 || u.isActive === true ? 'Yes' : 'No',
           u.roleName ? `${u.roleName} (${u.roleScope})` : '',
           u.companyName || '',
@@ -766,7 +776,7 @@ class UMUsersComponent {
         ]
         cols.forEach((v, colIdx) => {
           const td = document.createElement('td')
-          if (colIdx === 7) {
+          if (colIdx === 8) {
             // Actions column
             const actionsDiv = document.createElement('div')
             actionsDiv.style.display = 'flex'
@@ -871,6 +881,12 @@ class UMUsersComponent {
     inpLN.name = 'lastName'
     inpLN.value = this.editingUser ? this.editingUser.lastName || '' : ''
     form.appendChild(row('Last Name', inpLN))
+
+    const inpEMN = document.createElement('input')
+    inpEMN.className = 'ms-input'
+    inpEMN.name = 'employeeNumber'
+    inpEMN.value = this.editingUser ? this.editingUser.employeeNumber || '' : ''
+    form.appendChild(row('Employee Number', inpEMN))
 
     const inpPwd = document.createElement('input')
     inpPwd.className = 'ms-input'

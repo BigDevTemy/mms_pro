@@ -304,8 +304,8 @@ class WorkOrdersController
         $machineRowId = isset($input['machineRowId']) && $input['machineRowId'] !== '' ? (int)$input['machineRowId'] : null;
         $machineName = isset($input['machineName']) ? trim((string)$input['machineName']) : null;
 
-        if ($title === '' || $taskId <= 0) {
-            json_response(['error' => 'title and taskId are required'], 400);
+        if ($title === '') {
+            json_response(['error' => 'title is required'], 400);
         }
         if (!in_array($status, ['open','assigned','in_progress','on_hold','completed','cancelled'])) {
             json_response(['error' => 'Invalid status'], 400);
@@ -331,7 +331,7 @@ class WorkOrdersController
         $st = $pdo->prepare('SELECT id, company_id AS companyId FROM tasks WHERE id = ?');
         $st->execute([$taskId]);
         $task = $st->fetch();
-        if (!$task) { json_response(['error' => 'Task not found'], 404); }
+        //if (!$task) { json_response(['error' => 'Task not found'], 404); }
         if (!self::isSuperadmin($claims)) {
             $tCompanyId = $task['companyId'] !== null ? (int)$task['companyId'] : null;
             if ($tCompanyId !== ($claims['company_id'] ?? null)) {
